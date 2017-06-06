@@ -1,0 +1,29 @@
+{
+  "name": "nodeUDP",
+  "author": "Semih Onay semionay@gmail.com",
+  "homepage": "https://semyonic.github.io",
+  "description": "",
+  "repository": "https://github.com/Semyonic/udpToSocketio.git",
+  "keywords": [
+    "udp",
+    "socket.io"
+  ],
+  "directories": {
+    "test": "./test",
+    "example": "./example",
+    "lib": "./udpMessageGenerator"
+  },
+  "eslintConfig": ".eslintrc",
+  "engines": {
+    "node": "^8.0.0"
+  },
+  "version": "1.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "bootswatch": "^3.3.7",
+    "jquery": "^3.2.1",
+    "mime": "^1.3.6",
+    "socket.io": "^2.0.2"
+  }
+}
