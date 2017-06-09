@@ -1,120 +1,153 @@
 /**
- * Created by PhpStorm.
- * File: server.js
  * User: semihonay
- * Date: 5.06.2017
- * Time: 20:12
+ * File: server.js
+ * Date: 8.06.2017
  */
-const fs = require('fs');
-const mime = require('mime');
+const conifg = require('./config.js');
+console.log(conifg);
+var udpGen = require('./udpMessageGenerator/udpSender');
+var fetch = require('node-fetch');
+var express = require('express')
+    , app = express()
+    , http = require('http')
+    , server = http.createServer(app).listen(conifg.remoteWebServer.port)
+    , io = require('socket.io').listen(server);
 
-const http = require('http'),
-    dgram = require('dgram'),
-    socketio = require('socket.io');
-
-const app = http.createServer(handleRequest),
-    io = socketio.listen(app),
-    socket = dgram.createSocket('udp4');
-
-socket.on('listening', () => {
-  let address = socket.address();
-  console.log(
-      'UDP Server ' + address.address + ':' + address.port);
+var dgram = require('dgram');
+var UDPclient = dgram.createSocket('udp4').bind(33333);
+// routing
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+app.get('/main.js', (req, res) => {
+  res.sendFile(__dirname + '/main.js');
+});
+app.get('/jquery.min.js', (req, res) => {
+  res.sendFile(__dirname + '/node_modules/jquery/dist/jquery.min.js');
 });
 
-socket.on('message', (content, rinfo) => {
-  console.log('From', rinfo.address, rinfo.port + ' Data ' + content);
-  io.sockets.emit('udp message', new Buffer(content, 'base64').toString());
+setInterval(() => {
+  udpGen.sendMessage();
+}, 3000);
+// usernames which are currently connected to the chat
+var usernames = {};
+
+// rooms which are currently available in chat
+var rooms = ['livescreen10', 'livescreen11', 'livescreen12'];
+var currentRoom;
+
+UDPclient.on('message', data => {
+  let payload = new Buffer(data, 'base64').toString();
+  let payloadJSON = JSON.parse(payload);
+  //io.sockets.emit('message', payloadJSON);
+  io.sockets.in(currentRoom).emit('message', usernames);
+});
+
+// socket.io events
+io.sockets.on('connection', socket => {
+
+  // when the client emits 'adduser', this listens and executes
+  socket.on('adduser', userInfo => {
+    // store the username in the socket session for this client
+    socket.username = userInfo.username;
+    // store the room name in the socket session for this client
+    socket.room = userInfo.room;
+    currentRoom = userInfo.room;
+    // add the client's username to the global list
+    usernames[userInfo.username] = userInfo.username;
+    // send client to room 1
+    socket.join(userInfo.room);
+    // echo to client they've connected
+    socket.emit('updatechat', 'SERVER',
+        'you have connected to ' + socket.room + ' as ' + userInfo.username);
+    // echo to room 1 that a person has connected to their room
+    socket.broadcast.to(socket.room).
+        emit('updatechat', 'SERVER',
+            userInfo.username + ' has connected to this room');
+    socket.emit('updaterooms', rooms, socket.room);
+  });
+
+  // when the client emits 'sendchat', this listens and executes
+  socket.on('sendchat', data => {
+    // we tell the client to execute 'updatechat' with 2 parameters
+    io.sockets.in(socket.room).emit('updatechat', socket.username, data);
+  });
+
+  socket.on('message', data => {
+    io.sockets.in(socket.room).emit('getUDPdata', data);
+  });
+
+  socket.on('switchRoom', newroom => {
+    socket.leave(socket.room);
+    socket.join(newroom);
+    socket.emit('updatechat', 'SERVER',
+        'you have connected to ' + newroom + ' as ' + socket.username);
+    // sent message to OLD room
+    socket.broadcast.to(socket.room).
+        emit('updatechat', 'SERVER', socket.username + ' has left this room');
+    // update socket session room title
+    socket.room = newroom;
+    socket.broadcast.to(newroom).
+        emit('updatechat', 'SERVER', socket.username + ' has joined this room');
+    socket.emit('updaterooms', rooms, newroom);
+  });
+
+  // when the user disconnects.. perform this
+  socket.on('disconnect', () => {
+    // remove the username from global usernames list
+    delete usernames[socket.username];
+    // update list of users in chat, client-side
+    io.sockets.emit('updateusers', usernames);
+    // echo globally that this client has left
+    socket.broadcast.emit('updatechat', 'SERVER',
+        socket.username + ' has disconnected');
+    socket.leave(socket.room);
+  });
+
 });
 
 /*function handleRequest(req, res) {
+ fs.readFile('./index.html', 'utf-8', (error, content) => {
+ let url = req.url;
+ let mimeType = mime.lookup(url.substring(url.indexOf('.')));
 
- if (req.url.indexOf('/') !== -1) {
+ switch (mimeType) {
+ case 'text/css':
+ res.writeHead(200, {'Content-Type': mimeType});
+ fs.readFile(
+ __dirname + '/node_modules/bootswatch/paper/bootstrap.min.css',
+ (err, data) => {
+ res.write(data);
+ res.end();
+ });
+ break;
+ case 'application/javascript':
+ res.writeHead(200, {'Content-Type': mimeType});
+ if (url.indexOf('jquery') === 1) {
+ fs.readFile(
+ __dirname + '/node_modules/jquery/dist/jquery.min.js',
+ (err, data) => {
+ res.write(data);
+ res.end();
+ });
 
- fs.readFile(__dirname + '/index.html', function(err, data) {
- if (err) console.log(err);
+ } else {
+ console.log('Bootstrap = ', url.indexOf('bootstrap'));
+ fs.readFile(
+ __dirname + '/node_modules/bootstrap/dist/js/bootstrap.min.js',
+ (err, data) => {
+ res.write(data);
+ res.end();
+ });
+ }
+ break;
+ case 'image/x-icon':
+ console.log('Favicon yok');
+ break;
+ default:
  res.writeHead(200, {'Content-Type': 'text/html'});
- res.write(data);
+ res.write(content);
  res.end();
- });
  }
-
- if (req.url.indexOf('.js') !== -1) {
-
- fs.readFile(__dirname + '/node_modules/jquery/dist/jquery.min.js',
- function(err, data) {
- if (err) console.log(err);
- res.writeHead(200, {'Content-Type': 'text/javascript'});
- res.write(data);
- res.end();
  });
-
- fs.readFile(__dirname + '/node_modules/bootstrap/dist/js/bootstrap.min.js',
- function(err, data) {
- if (err) console.log(err);
- res.writeHead(200, {'Content-Type': 'text/javascript'});
- res.write(data);
- res.end();
- });
- }
-
- if (req.url.indexOf('.css') !== -1) {
- fs.readFile(__dirname + '/node_modules/bootswatch/paper/bootstrap.min.css',
- function(err, data) {
- if (err) console.log(err);
- res.writeHead(200, {'Content-Type': 'text/css'});
- res.write(data);
- res.end();
- });
- }
-
  }*/
-
-function handleRequest(req, res) {
-  fs.readFile('./index.html', 'utf-8', (error, content) => {
-    let url = req.url;
-    let mimeType = mime.lookup(url.substring(url.indexOf('.')));
-
-    switch (mimeType) {
-      case 'text/css':
-        res.writeHead(200, {'Content-Type': mimeType});
-        fs.readFile(
-            __dirname + '/node_modules/bootswatch/paper/bootstrap.min.css',
-            (err, data) => {
-              res.write(data);
-              res.end();
-            });
-        break;
-      case 'application/javascript':
-        res.writeHead(200, {'Content-Type': mimeType});
-        if (url.indexOf('jquery') === 1) {
-          fs.readFile(
-              __dirname + '/node_modules/jquery/dist/jquery.min.js',
-              (err, data) => {
-                res.write(data);
-                res.end();
-              });
-
-        } else {
-          console.log('Bootstrap = ', url.indexOf('bootstrap'));
-          fs.readFile(
-              __dirname + '/node_modules/bootstrap/dist/js/bootstrap.min.js',
-              (err, data) => {
-                res.write(data);
-                res.end();
-              });
-        }
-        break;
-      case 'image/x-icon':
-        console.log('Favicon yok');
-        break;
-      default:
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.write(content);
-        res.end();
-    }
-  });
-}
-
-socket.bind(33333);
-app.listen(3000);
