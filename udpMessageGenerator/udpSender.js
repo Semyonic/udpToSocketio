@@ -14,7 +14,8 @@ function parseXml(xml) {
   }
 }
 
-var sendUDP = () => {
+var sendUDP = (room, data) => {
+
   var PORT = 33333;
   var HOST = '127.0.0.1';
 
@@ -39,12 +40,11 @@ var sendUDP = () => {
    console.log(j);
    });*/
 
-  var message = new Buffer(JSON.stringify({name: 'test'}));
+  var message = new Buffer(JSON.stringify(data));
 
   var client = dgram.createSocket('udp4');
   client.send(message, 0, message.length, PORT, HOST, (err, bytes) => {
     if (err) throw err;
-    console.log('UDP message sent to ' + HOST + ':' + PORT);
     client.close();
   });
 };

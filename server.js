@@ -3,44 +3,65 @@
  * File: server.js
  * Date: 8.06.2017
  */
-const conifg = require('./config.js');
-console.log(conifg);
 var udpGen = require('./udpMessageGenerator/udpSender');
 var fetch = require('node-fetch');
 var express = require('express')
     , app = express()
     , http = require('http')
-    , server = http.createServer(app).listen(conifg.remoteWebServer.port)
+    , https = require('https')
+    , server = http.createServer(app).listen(3000)
     , io = require('socket.io').listen(server);
 
 var dgram = require('dgram');
 var UDPclient = dgram.createSocket('udp4').bind(33333);
+
 // routing
-app.get('/', (req, res) => {
+app.get('/', (req, res, next) => {
   res.sendFile(__dirname + '/index.html');
 });
-app.get('/main.js', (req, res) => {
+app.get('/xterm', (req, res, next) => {
+  res.sendFile(__dirname + '/public/terminal.html');
+});
+app.get('/main.js', (req, res, next) => {
   res.sendFile(__dirname + '/main.js');
 });
-app.get('/jquery.min.js', (req, res) => {
+app.get('/jquery.min.js', (req, res, next) => {
   res.sendFile(__dirname + '/node_modules/jquery/dist/jquery.min.js');
 });
+app.get('/xterm.js', (req, res, next) => {
+  res.sendFile(__dirname + '/node_modules/xterm/dist/xterm.js');
+});
+app.get('/xterm.css', (req, res, next) => {
+  res.sendFile(__dirname + '/node_modules/xterm/dist/xterm.css');
+});
+
+function makeid() {
+  var text = '';
+  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for (var i = 0; i < 5; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
+}
 
 setInterval(() => {
-  udpGen.sendMessage();
+  udpGen.sendMessage('screen10', {id: makeid(), room: 'screen10'});
+  udpGen.sendMessage('screen11', {id: makeid(), room: 'screen11'});
 }, 3000);
 // usernames which are currently connected to the chat
 var usernames = {};
 
 // rooms which are currently available in chat
-var rooms = ['livescreen10', 'livescreen11', 'livescreen12'];
+var rooms = ['screen10', 'screen11', 'screen12'];
 var currentRoom;
+
 
 UDPclient.on('message', data => {
   let payload = new Buffer(data, 'base64').toString();
   let payloadJSON = JSON.parse(payload);
-  //io.sockets.emit('message', payloadJSON);
-  io.sockets.in(currentRoom).emit('message', usernames);
+  console.log(payloadJSON);
+  io.sockets.in(payloadJSON.room).emit('message', payloadJSON);
 });
 
 // socket.io events
@@ -78,8 +99,9 @@ io.sockets.on('connection', socket => {
   });
 
   socket.on('switchRoom', newroom => {
-    socket.leave(socket.room);
+    //socket.leave(socket.room);
     socket.join(newroom);
+    currentRoom = newroom;
     socket.emit('updatechat', 'SERVER',
         'you have connected to ' + newroom + ' as ' + socket.username);
     // sent message to OLD room
@@ -105,49 +127,3 @@ io.sockets.on('connection', socket => {
   });
 
 });
-
-/*function handleRequest(req, res) {
- fs.readFile('./index.html', 'utf-8', (error, content) => {
- let url = req.url;
- let mimeType = mime.lookup(url.substring(url.indexOf('.')));
-
- switch (mimeType) {
- case 'text/css':
- res.writeHead(200, {'Content-Type': mimeType});
- fs.readFile(
- __dirname + '/node_modules/bootswatch/paper/bootstrap.min.css',
- (err, data) => {
- res.write(data);
- res.end();
- });
- break;
- case 'application/javascript':
- res.writeHead(200, {'Content-Type': mimeType});
- if (url.indexOf('jquery') === 1) {
- fs.readFile(
- __dirname + '/node_modules/jquery/dist/jquery.min.js',
- (err, data) => {
- res.write(data);
- res.end();
- });
-
- } else {
- console.log('Bootstrap = ', url.indexOf('bootstrap'));
- fs.readFile(
- __dirname + '/node_modules/bootstrap/dist/js/bootstrap.min.js',
- (err, data) => {
- res.write(data);
- res.end();
- });
- }
- break;
- case 'image/x-icon':
- console.log('Favicon yok');
- break;
- default:
- res.writeHead(200, {'Content-Type': 'text/html'});
- res.write(content);
- res.end();
- }
- });
- }*/
