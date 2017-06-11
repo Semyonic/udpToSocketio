@@ -3,81 +3,63 @@
  * File: main.js
  * Date: 8.06.2017
  */
-var socket = io.connect('http://192.168.1.29');
+//fetch('config.json').then(function(response) {
+    // Convert to JSON
+//  return response.json();
+//}).then(function(json) {
+
+    //var socket = io.connect(json.ip);
+var socket = io.connect('192.168.1.29');
 // on connection to server, ask for user's name with an anonymous callback
 socket.on('connect', () => {
   // call the server-side function 'adduser' and send one parameter (value of prompt)
-  socket.emit('adduser', {username: socket.id, room: window.location.href});
+  if (window.location.pathname === '/') {
+    socket.emit('adduser', {username: socket.id, room: 'home'});
+  } else {
+    socket.emit('adduser',
+        {username: socket.id, room: window.location.href.substr(20)});
+  }
 });
+
+function showUsers() {
+  socket.on('users', (users) => {
+    console.log(users);
+  });
+}
+
 // listener, whenever the server emits 'updatechat', this updates the chat body
 socket.on('updatechat', (username, data) => {
-  jQuery('#conversation').append('<b>' + username + ':</b> ' + data + '<br>');
-});
-// listener, whenever the server emits 'updaterooms', this updates the room the client is in
-socket.on('updaterooms', (rooms, current_room) => {
-  jQuery('#rooms').empty();
-  jQuery.each(rooms, (key, value) => {
-    if (value === current_room) {
-      jQuery('#rooms').append('<div>' + value + '</div>');
-    }
-    else {
-      jQuery('#rooms').
-          append('<div><a href="#" onclick="switchRoom(\'' + value + '\')">' +
-              value + '</a></div>');
-    }
+  jQuery.notify(username, {
+    newest_on_top: true,
+    type: 'success',
+    animate: {
+      enter: 'animated fadeInRight',
+      exit: 'animated fadeOutRight',
+    },
   });
 });
 
 socket.on('message', (data) => {
-  jQuery('#conversation').
-      append('<b>UDP Message</b> ' + JSON.stringify(data) + '<br>');
-});
+  var tableId = '#udpData';
+  var tbody = $(tableId).children('tbody');
+  var table = tbody.length ? tbody : $(tableId);
+  table.append('<tr><td>' + data.id + '</td><td>' + data.room + '</td></tr>');
+  // Auto-scorll after added data into table
+  window.scrollTo(0, document.body.scrollHeight);
 
-window.addEventListener('beforeunload',
-    e => socket.emit('leave', {username: socket.id}));
-
-var timeout;
-
-function timeoutFunction() {
-  typing = false;
-  socket.emit('typing', false);
-}
-
-jQuery('.typing-message').keyup(() => {
-  console.log('happening');
-  typing = true;
-  socket.emit('typing', 'typing...');
-  clearTimeout(timeout);
-  timeout = setTimeout(timeoutFunction, 2000);
-});
-
-socket.on('typing', data => {
-  if (data) {
-    jQuery('.typing').html(data);
-  } else {
-    jQuery('.typing').html('');
-  }
 });
 
 function switchRoom(room) {
-  jQuery('#conversation').empty();
   socket.emit('switchRoom', room);
+  $('#udpBody').empty();
 }
 
-// on load of page
 jQuery(function() {
-  // when the client clicks SEND
   jQuery('#datasend').click(() => {
-    var message = jQuery('#data').val();
-    jQuery('#data').val('');
-    // tell server to execute 'sendchat' and send along one parameter
+    var data = '#data';
+    var message = jQuery(data).val();
+    jQuery(data).val('');
     socket.emit('sendchat', message);
   });
-  // when the client hits ENTER on their keyboard
-  jQuery('#data').keypress(function(e) {
-    if (e.which === 13) {
-      jQuery(this).blur();
-      jQuery('#datasend').focus().click();
-    }
   });
-});
+//});
