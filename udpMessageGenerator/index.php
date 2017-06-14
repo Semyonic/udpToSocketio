@@ -16,17 +16,10 @@ function sendUDPdata($data, $ip, $port)
 {
     if ($socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP)) {
         socket_sendto($socket, $data, strlen($data), 0, $ip, $port);
+        socket_close($socket);
     } else {
         print('Error');
     }
-}
-
-/**
- * @param $socket
- */
-function closeUDPconection($socket)
-{
-    socket_close($socket);
 }
 
 function generateRandomString($length = 10)
@@ -40,12 +33,10 @@ function generateRandomString($length = 10)
     return $randomString;
 }
 
-while (true) {
     $socket = sendUDPdata(stripslashes(json_encode([
         "name" => "test-data",
         "version" => "0.0.0",
-        "payload" => ["key" => random_int(0, 1000), "msg" => generateRandomString(6)],
-    ], JSON_UNESCAPED_SLASHES )), '192.168.1.29', 33333);
-    //closeUDPconection($socket);
+        "payload" => ["key" => rand(0, 1000), "msg" => generateRandomString(6)],
+    ], JSON_UNESCAPED_SLASHES )), '192.168.132.174', 33333);
+    closeUDPconection($socket);
     sleep(1);
-}
