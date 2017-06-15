@@ -14,7 +14,7 @@ function parseXml(xml) {
   }
 }
 
-var sendUDP = (room, data) => {
+var sendUDP = (data) => {
 
   var PORT = 33333;
   var HOST = '127.0.0.1';
