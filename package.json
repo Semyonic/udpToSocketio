@@ -29,6 +29,8 @@
     "node-fetch": "^1.7.1",
     "socket.io": "^2.0.2",
     "xmldom": "^0.1.27",
-    "xterm": "^2.7.0"
+    "xterm": "^2.7.0",
+    "ejs": "latest",
+    "debug": "latest"
   }
 }

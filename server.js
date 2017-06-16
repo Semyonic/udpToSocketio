@@ -6,66 +6,73 @@
 var udpGen = require('./udpMessageGenerator/udpSender');
 var fetch = require('node-fetch');
 var path = require('path');
+var debug = require('debug')('nodeUDP:server');
+
 var express = require('express')
     , app = express()
     , ejs = require('ejs')
     , http = require('http')
     , https = require('https')
     , server = http.createServer(app).listen(3000)
-    , io = require('socket.io').listen(server);
+    , io = require('socket.io').listen(server, {path: '/app1/socket.io/'});
 
 var dgram = require('dgram');
 var UDPclient = dgram.createSocket('udp4').bind(33333);
 
+app.set('trust proxy', '127.0.0.1');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-app.get('/', (req, res, next) => {
+app.get('/app1', (req, res, next) => {
   res.render('index', {title: 'Express'});
 });
 
-app.get('/screen10', (req, res, next) => {
-  res.render('screen10', {title: 'Screen-10'});
+app.get('/app1/home', (req, res, next) => {
+  res.render('index', {title: 'Express'});
 });
 
-app.get('/screen11', (req, res, next) => {
-  res.render('screen11', {title: 'Screen-11'});
+app.get('/app1/screen10', (req, res, next) => {
+  res.render('index', {title: 'Screen-10'});
 });
 
-app.get('/screen12', (req, res, next) => {
-  res.render('screen12', {title: 'Screen-12'});
+app.get('/app1/screen11', (req, res, next) => {
+  res.render('index', {title: 'Screen-11'});
+});
+
+app.get('/app1/screen12', (req, res, next) => {
+  res.render('index', {title: 'Screen-12'});
 });
 
 //JS libraries
-app.get('/config.json', (req, res, next) => {
+app.get('/app1/config.json', (req, res, next) => {
   res.sendFile(__dirname + '/config.json');
 });
-app.get('/xterm', (req, res, next) => {
+app.get('/app1/xterm', (req, res, next) => {
   res.sendFile(__dirname + '/public/terminal.html');
 });
-app.get('/main.js', (req, res, next) => {
+app.get('/app1/main.js', (req, res, next) => {
   res.sendFile(__dirname + '/main.js');
 });
-app.get('/bootstrap.min.css', (req, res, next) => {
+app.get('/app1/bootstrap.min.css', (req, res, next) => {
   res.sendFile(__dirname + '/node_modules/bootswatch/slate/bootstrap.min.css');
 });
-app.get('/jquery.min.js', (req, res, next) => {
+app.get('/app1/jquery.min.js', (req, res, next) => {
   res.sendFile(__dirname + '/node_modules/jquery/dist/jquery.min.js');
 });
-app.get('/bootstrap.min.js', (req, res, next) => {
+app.get('/app1/bootstrap.min.js', (req, res, next) => {
   res.sendFile(__dirname + '/node_modules/bootstrap/dist/js/bootstrap.min.js');
 });
-app.get('/animate.min.css', (req, res, next) => {
+app.get('/app1/animate.min.css', (req, res, next) => {
   res.sendFile(__dirname + '/node_modules/animate.css/animate.min.css');
 });
-app.get('/bootstrap-notify.js', (req, res, next) => {
+app.get('/app1/bootstrap-notify.js', (req, res, next) => {
   res.sendFile(
       __dirname + '/node_modules/bootstrap-notify/bootstrap-notify.js');
 });
-app.get('/xterm.js', (req, res, next) => {
+app.get('/app1/xterm.js', (req, res, next) => {
   res.sendFile(__dirname + '/node_modules/xterm/dist/xterm.js');
 });
-app.get('/xterm.css', (req, res, next) => {
+app.get('/app1/xterm.css', (req, res, next) => {
   res.sendFile(__dirname + '/node_modules/xterm/dist/xterm.css');
 });
 

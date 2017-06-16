@@ -9,11 +9,11 @@
 //}).then(function(json) {
 
     //var socket = io.connect(json.ip);
-var socket = io.connect('http://192.168.1.29');
+var socket = io.connect(window.location.origin, {path: '/app1/socket.io/'});
 // on connection to server, ask for user's name with an anonymous callback
 socket.on('connect', () => {
   // call the server-side function 'adduser' and send one parameter (value of prompt)
-  if (window.location.pathname === '/') {
+  if (window.location.pathname === '/app1/home') {
     socket.emit('adduser', {username: socket.id, room: 'home'});
   } else {
     socket.emit('adduser',
