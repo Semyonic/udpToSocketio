@@ -2,8 +2,11 @@
   "name": "nodeUDP",
   "author": "Semih Onay semionay@gmail.com",
   "homepage": "https://semyonic.github.io",
-  "description": "",
+  "description": "NodeJS app that listens UDP messages then transfers to socket.io for real-time data streaming",
   "repository": "https://github.com/Semyonic/udpToSocketio.git",
+  "scripts": {
+    "start": "node server.js"
+  },
   "keywords": [
     "udp",
     "socket.io"
@@ -15,22 +18,22 @@
   },
   "eslintConfig": ".eslintrc",
   "engines": {
-    "node": "^8.0.0"
+    "node": "^6.11.0"
   },
   "version": "1.0.0",
   "main": "server.js",
   "dependencies": {
     "bootstrap": "^3.3.7",
     "bootswatch": "^3.3.7",
+    "debug": "^2.6.8",
+    "ejs": "^2.5.6",
     "express": "^4.15.3",
     "fetch": "^1.1.0",
     "jquery": "^3.2.1",
     "mime": "^1.3.6",
     "node-fetch": "^1.7.1",
-    "socket.io": "^2.0.2",
+    "socket.io": "^2.0.3",
     "xmldom": "^0.1.27",
-    "xterm": "^2.7.0",
-    "ejs": "latest",
-    "debug": "latest"
+    "xterm": "^2.7.0"
   }
 }
