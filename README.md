@@ -1,4 +1,6 @@
 # udpToSocketio  
+
+[![Join the chat at https://gitter.im/udpToSocketio/Lobby](https://badges.gitter.im/udpToSocketio/Lobby.svg)](https://gitter.im/udpToSocketio/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b73cbbeb7735499c8f2f7706a6c60828)](https://www.codacy.com/app/semih.onay/udpToSocketio?utm_source=github.com&utm_medium=referral&utm_content=Semyonic/udpToSocketio&utm_campaign=badger)
 [![Build Status](https://beefier-pike-4436.dataplicity.io/jenkins/buildStatus/icon?job=nodeUDP)](https://beefier-pike-4436.dataplicity.io/jenkins/blue/organizations/jenkins/nodeUDP/activity)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues)
