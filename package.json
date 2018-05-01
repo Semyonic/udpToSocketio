@@ -23,7 +23,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "dependencies": {
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^4.1.1",
     "bootswatch": "^3.3.7",
     "debug": "^2.6.8",
     "ejs": "^2.5.6",
